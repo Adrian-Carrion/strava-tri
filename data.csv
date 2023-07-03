@@ -1,0 +1,31 @@
+,resource_state,athlete_resource_state,athlete_firstname,athlete_lastname,name,distance,moving_time,elapsed_time,total_elevation_gain,type,sport_type,workout_type
+0,2,2,Almudena,P.,Bicicleta por la mañana,98416.0,16827,26955,573.0,Ride,Ride,
+1,2,2,Gustavo,S.,Morning Ride,42888.3,7370,8672,223.0,Ride,Ride,
+2,2,2,Manu,S.,Gran Fondo Costasoleño Chiringuitero ☀️🏖️🚲,103225.0,17362,30448,621.0,Ride,Ride,10.0
+3,2,2,Eva,O.,Morning Run,5006.4,1949,1956,3.0,Run,Run,
+4,2,2,Alberto,I.,Natación de mañana,1700.0,1973,4140,0.0,Swim,Swim,
+5,2,2,marcelo,C.,Morning Ride,44178.9,7205,7205,616.0,Ride,Ride,
+6,2,2,Gabi,M.,Bicicleta por la mañana,45033.2,5543,5543,102.6,Ride,Ride,
+7,2,2,Antonio,F.,Carrera de mañana,5195.2,1890,1896,4.4,Run,Run,0.0
+8,2,2,Salvador🏔,V.,3 horitas de aeróbico en buena compañía 🐐,18245.6,10615,11586,1130.0,Run,TrailRun,3.0
+9,2,2,Adrian,C.,Night Ride,27021.5,3764,3764,0.0,Ride,Ride,
+10,2,2,Rubén,G.,Bicicleta to Night,26200.6,3885,3885,322.9,Ride,Ride,10.0
+11,2,2,Salvador🏔,V.,Natación de tarde,900.0,1412,3896,0.0,Swim,Swim,
+12,2,2,Manu,S.,Cantarriján 🏃🏽‍♂️ Going Down ↘️,2627.2,1135,1298,38.2,Run,Run,0.0
+13,2,2,Gabi,M.,Carrera a la hora del almuerzo,8015.7,2573,2687,26.0,Run,Run,
+14,2,2,Alberto,I.,Natación de mañana,1675.0,1565,6188,0.0,Swim,Swim,
+15,2,2,Salvador🏔,V.,Bicicleta por la mañana,56161.5,8390,8545,880.0,Ride,Ride,12.0
+16,2,2,Adrian,C.,Night Run,12019.6,4039,4039,156.0,Run,Run,
+17,2,2,Manu,S.,Fuengirola 🔹 Noche de San Juan 🔸 500m,545.2,514,566,0.0,Swim,Swim,
+18,2,2,Salvador🏔,V.,Bicicleta al anochecer,23137.4,2701,2701,0.0,Ride,Ride,
+19,2,2,Lourdes,T.,Bicicleta por la tarde,58047.7,10021,10591,882.0,Ride,Ride,10.0
+20,2,2,marcelo,C.,Afternoon Ride,60058.2,9936,11390,830.0,Ride,Ride,
+21,2,2,Jose Maria,Z.,Natación a la hora del almuerzo,508.0,2328,2328,2.6,Swim,Swim,
+22,2,2,Pepe,S.,Bicicleta por la mañana,49033.0,7627,8456,374.0,Ride,Ride,
+23,2,2,Alberto,I.,Natación de mañana,1850.0,1755,3487,0.0,Swim,Swim,
+24,2,2,Eva,O.,Morning Swim,2250.0,2924,3480,0.0,Swim,Swim,
+25,2,2,Gustavo,S.,Evening Run,813.0,388,388,0.0,Run,Run,
+26,2,2,Salvador🏔,V.,Natación de noche,1009.7,1315,1447,0.0,Swim,Swim,
+27,2,2,Adrian,C.,Natación de noche,1009.7,1315,1447,0.0,Swim,Swim,
+28,2,2,Gabi,M.,Natación de noche,1387.1,1558,1938,0.0,Swim,Swim,
+29,2,2,Lourdes,T.,Carrera de noche,7453.8,2569,2569,0.0,Run,Run,
