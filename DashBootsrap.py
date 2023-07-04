@@ -21,13 +21,14 @@ from datetime import date, timedelta, datetime
 import plotly.graph_objects as go
 import json
 import dash_bootstrap_components as dbc
+import dash
 from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.1/dbc.min.css")
 
 today = datetime.now()
 first_day =  today.today() + timedelta(days = - today.weekday())
-first_day = datetime.combine(first_day.today(), datetime.min.time())
+first_day = datetime.combine(first_day, datetime.min.time())
 
 def calcTriPuntos(row):
     if row['type'] == 'Run' or row['type'] == 'TrailRun':
@@ -56,39 +57,51 @@ df = df[df['activity_date_dt'] >= first_day]
 df['stat_distance'] = df['stat_distance'].str.replace(' km','').str.replace(' m','').astype(float)
 df_count = df.groupby(['type','athlete_name'])['stat_distance'].sum().reset_index(name='Distancia').sort_values('Distancia')
 df['tri_puntos'] = df.apply(calcTriPuntos, axis=1)
-df_tri_puntos = df.groupby(['type','athlete_name'])['tri_puntos'].sum().reset_index(name='TriPuntos').sort_values('TriPuntos')
+df_tri_puntos = df.groupby(['type','athlete_name'])['tri_puntos'].sum().reset_index(name='TriPuntos')
 
 df_swim = df_count.query("type=='Swim'").sort_values(by='Distancia', ascending=False)
 
-fig = go.Figure()
-fig.add_trace(go.Indicator(
+total_swim = df_count.query("type=='Swim'")['Distancia'].sum()
+total_ride = df_count.query("type=='Ride' or type=='VirtualRide'")['Distancia'].sum()
+total_run = df_count.query("type=='Run' or type=='TrailRun' or type=='MountainBikeRide'")['Distancia'].sum()
+
+fig_sv_swim = go.Figure()
+fig_sv_ride = go.Figure()
+fig_sv_run = go.Figure()
+
+fig_sv_swim.add_trace(go.Indicator(
     mode = "number",
-    value = 300,
-    number={'font_color':'red'},
+    value = total_swim,
+    title = {"text": "Natación"},
+    number = {"font_color" : "#1381f4", "valueformat": "f", "suffix":" m"},
+    domain = {'row': 0, 'column': 0}))
+fig_sv_ride.add_trace(go.Indicator(
+    mode = "number",
+    value = total_ride,
+    title = {"text": "Ciclismo"},
+    number={'font_color':'#10882f',  "valueformat": "f", "suffix":" Km"},
     domain = {'row': 0, 'column': 0}))
 
-fig.add_trace(go.Indicator(
+fig_sv_run.add_trace(go.Indicator(
     mode = "number",
-    value = 500,
-    domain = {'row': 0, 'column': 1}))
+    value = total_run,
+    title = {"text": "Carrera"},
+    number={'font_color':'#ffa500',  "valueformat": "f", "suffix":" Km"},
 
-fig.add_trace(go.Indicator(
-    mode = "number",
-    value = 700,
-    domain = {'row': 0, 'column': 2}))
-fig.update_layout(
-    grid = {'rows': 2, 'columns': 2, 'pattern': "independent"})
+    domain = {'row': 0, 'column': 0}))
+# fig_sv.update_layout(
+#     grid = {'rows': 2, 'columns': 2, 'pattern': "independent"})
 
-fig_swim = px.bar(df_swim.head(20),
+fig_swim = px.bar(df_swim.head(15),
              x="Distancia",
              y="athlete_name",
              orientation='h',
              hover_data=["Distancia"],
-             height=400,
+             height=500,
              title='🏊‍♀️🏊Pececito de la semana',
              text='Distancia',
              labels={'athlete_name':'Triatleta'})
-fig_swim.update_traces(width=len(df_swim)/10, marker_color='#1381f4')
+fig_swim.update_traces(width=len(df_swim)/15, marker_color='#1381f4')
 fig_swim.update_layout(yaxis={'categoryorder':'total ascending', 'fixedrange':True})
 fig_swim.update_layout(xaxis={'categoryorder':'total ascending','gridcolor':'LightGrey', 'fixedrange':True})
 fig_swim.layout.xaxis.fixedrange = True
@@ -99,16 +112,16 @@ fig_swim.update_layout({
 })
 
 df_run = df_count.query("type=='Run' or type=='TrailRun' or type=='MountainBikeRide'").sort_values(by='Distancia', ascending=False)
-fig_run = px.bar(df_run.head(20),
+fig_run = px.bar(df_run.head(15),
              x="Distancia", 
              y="athlete_name",
              orientation='h',
              hover_data=["Distancia"],
-             height=400,
+             height=500,
              title='🏃‍♂️🏃‍♀️Correcaminos de la semana',
              text='Distancia',
              labels={'athlete_name':'Triatleta'})
-fig_run.update_traces(width=len(df_run)/10, marker_color='#ffa500')
+fig_run.update_traces(width=len(df_run)/15, marker_color='#ffa500')
 fig_run.update_layout(yaxis={'categoryorder':'total ascending', 'fixedrange':True})
 fig_run.update_layout(xaxis={'categoryorder':'total ascending','gridcolor':'LightGrey', 'fixedrange':True})
 fig_run.update_layout({
@@ -117,17 +130,17 @@ fig_run.update_layout({
 })
 
 
-df_ride = df_count.query("type=='Ride' or type=='VirtualRide'").sort_values(by='Distancia', ascending=False)
-fig_ride = px.bar(df_ride.head(20),
+df_ride = df_count.query("type=='Ride' or type=='VirtualRide'").sort_values(by='Distancia')
+fig_ride = px.bar(df_ride.head(15),
              x="Distancia", 
              y="athlete_name",
              orientation='h',
              hover_data=["Distancia"],
-             height=400,
+             height=500,
              title='🚴‍♂️🚴‍♀️Pedalines de la semana',
              text='Distancia',
              labels={'athlete_name':'Triatleta'})
-fig_ride.update_traces(width=len(df_ride)/10, marker_color='#10882f')
+fig_ride.update_traces(width=len(df_ride)/15, marker_color='#10882f')
 fig_ride.update_layout(yaxis={'categoryorder':'total ascending', 'fixedrange':True})
 fig_ride.update_layout(xaxis={'categoryorder':'total ascending','gridcolor':'LightGrey', 'fixedrange':True})
 fig_ride.update_layout({
@@ -136,16 +149,15 @@ fig_ride.update_layout({
 })
 
 
-df_tripuntos = df_count.query("type=='TriPuntos'").sort_values(by='Distancia', ascending=False)
-fig_tripuntos = px.bar(df_tri_puntos.head(20),
+fig_tripuntos = px.bar(df_tri_puntos,
              x="TriPuntos",
              y="athlete_name",
              color="type",
-             color_discrete_sequence =['#1381f4','#ffa500','#10882f'],
+             color_discrete_sequence =['#10882f','#ffa500','#1381f4'],
              orientation='h',
              hover_data=["TriPuntos"],
-             height=400,
-             title='TriPuntos🏊‍♀️🚴‍♀️🏃‍♂️',
+             height=800,
+             title='🏊‍♀️🚴‍♀️🏃‍♂️ TriPuntos de la semana',
              text='TriPuntos',
              labels={'athlete_name':'Triatleta'})
 fig_tripuntos.update_layout(xaxis={'categoryorder':'total ascending','gridcolor':'LightGrey', 'fixedrange':True})
@@ -155,59 +167,65 @@ fig_tripuntos.update_layout({
 'paper_bgcolor': 'rgb(255, 255, 255)',
 })
 
-# app.layout = html.Div([
-#         html.Div(children=[
-#         dcc.Graph(
-#             id='sv-graph',
-#             figure=fig,
-#             config=config
-#             )]),
-#         html.Div(children=[
-#         dcc.Graph(
-#             id='tripoints-graph',
-#             figure=fig_tripuntos,
-#             config=config
-#             )]),
-#         html.Div(children=[
-#         dcc.Graph(
-#             id='swim-graph',
-#             figure=fig_swim,
-#             config=config,
-#             style={'width' : '33%'}
-#             ),
-#         dcc.Graph(
-#             id='ride-graph',
-#             figure=fig_ride,
-#             config=config,
-#             style={'width' : '33%'}
-#         ),
-#         dcc.Graph(
-#             id='run-graph',
-#             figure=fig_run,
-#             config=config,
-#             style={'width' : '33%'}
-#         )
-#     ], style={'display': 'flex', 'flex-direction': 'row'})
-#         ])
-
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
 
-header = html.H4(
-    "Los números del Club", className="text-white p-4 mb-2 text-center"
+header = html.H1("Los números del Club", className="text-center bg-light border m-4 p-4")
+    
+
+title_totals = html.Div([
+    html.H2(
+        "Totales", className="text-center m-4 bg-light border p-4", id='tooltip-target'
+        ),
+    dbc.Tooltip(
+           "Suma de todas las distancias desde el 01/07/2023",
+           target="tooltip-target",
+           placement='bottom'
+       )
+    ])
+
+title_tripoints =  html.H2(
+    "Tripuntos: 🏊‍♀️ Nadar x4 - 🚴‍♀️ Bici x2 - 🏃‍♂️ Correr x1", className="text-center bg-light border"
 )
 
+logo = html.Img(src=app.get_asset_url('logo_color.jpg'),style={'width':'100%'},  className="float-end m-4")
+# header_logo = html.Div([header, logo], className='d-flex justify-content-evenly')
+
+title_sports=  html.H2(
+    "Ranking semanal por deporte", className="text-center m-4 bg-light border p-4"
+)
 
 graph_tripuntos = html.Div(dcc.Graph(id='tripoints-graph',figure=fig_tripuntos,config=config), className="m-3")
 graph_swim = dcc.Graph(id='swim-graph',figure=fig_swim,config=config)
 graph_ride = dcc.Graph(id='ride-graph',figure=fig_ride,config=config)
 graph_run = dcc.Graph(id='run-graph',figure=fig_run,config=config)
+
+graph_sv_swim = dcc.Graph(id='sv_graph_swim',figure=fig_sv_swim,config=config)
+graph_sv_ride = dcc.Graph(id='sv_graph_ride',figure=fig_sv_ride,config=config)
+graph_sv_run = dcc.Graph(id='sv_graph_run',figure=fig_sv_run,config=config)
 app.layout = dbc.Container(
     [
-        header,
+    # header_logo,
+        # header,
+        # logo,
+        dbc.Row(
+            [dbc.Col([header], width={"size": 11}),
+             dbc.Col([logo], width={"size":1}),
+        ]
+        ),
+        title_totals,
+        dbc.Row(
+            [dbc.Col([graph_sv_swim], width=12, md=4),
+             dbc.Col([graph_sv_ride], width=12, md=4),
+             dbc.Col([graph_sv_run], width=12, md=4)]
+        ),
+        html.Br(),html.Br(),
+        title_tripoints,
         dbc.Row(
             [dbc.Col([graph_tripuntos],width=12)]
         ),
+        html.Br(),html.Br(),
+        title_sports,
         dbc.Row(
             [dbc.Col([graph_swim], width=12, md=4),
             dbc.Col([graph_ride], width=12, md=4),
