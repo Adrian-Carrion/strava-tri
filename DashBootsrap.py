@@ -112,12 +112,15 @@ def serve_layout():
         title = {"text": "Natación"},
         number = {"font_color" : "#1381f4", "valueformat": "f", "suffix":" m"},
         domain = {'row': 0, 'column': 0}))
+    fig_sv_swim.layout.height = 250
+
     fig_sv_ride.add_trace(go.Indicator(
         mode = "number",
         value = total_ride,
         title = {"text": "Ciclismo"},
         number={'font_color':'#10882f',  "valueformat": "f", "suffix":" Km"},
         domain = {'row': 0, 'column': 0}))
+    fig_sv_ride.layout.height = 250
     
     fig_sv_run.add_trace(go.Indicator(
         mode = "number",
@@ -126,6 +129,8 @@ def serve_layout():
         number={'font_color':'#ffa500',  "valueformat": "f", "suffix":" Km"},
     
         domain = {'row': 0, 'column': 0}))
+    fig_sv_run.layout.height = 250
+    
     
     fig_swim = px.bar(df_swim.head(15),
                  x="Distancia",
