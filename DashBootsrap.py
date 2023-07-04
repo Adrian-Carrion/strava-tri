@@ -89,7 +89,7 @@ def serve_layout():
         ])
     
     title_tripoints =  html.H2(
-        "Tripuntos: 🏊‍♀️ Nadar x4 - 🏃‍♂️ Correr x2 - 🚴‍♀️ Bici x1", className="text-center bg-light border"
+        "Tripuntos: 🏊‍♀️ Nadar x4 - 🏃‍♂️ Correr x2 - 🚴‍♀️ Bici x1", className="text-center m-4 p-4 bg-light border"
     )
     
     logo = html.Img(src=app.get_asset_url('logo_color.jpg'),style={'width':'100%'},  className="float-end m-4")
@@ -138,6 +138,7 @@ def serve_layout():
                  orientation='h',
                  hover_data=["Distancia"],
                  height=500,
+                 text_auto='.2f',
                  title='🏊‍♀️🏊Pececito de la semana',
                  text='Distancia',
                  labels={'athlete_name':'Triatleta'})
@@ -162,6 +163,7 @@ def serve_layout():
                  orientation='h',
                  hover_data=["Distancia"],
                  height=500,
+                 text_auto='.2f',
                  title='🏃‍♂️🏃‍♀️Correcaminos de la semana',
                  text='Distancia',
                  labels={'athlete_name':'Triatleta'})
@@ -181,6 +183,7 @@ def serve_layout():
                  orientation='h',
                  hover_data=["Distancia"],
                  height=500,
+                 text_auto='.2f',
                  title='🚴‍♂️🚴‍♀️Pedalines de la semana',
                  text='Distancia',
                  labels={'athlete_name':'Triatleta'})
@@ -202,8 +205,9 @@ def serve_layout():
                  color="type",
                  color_discrete_sequence =['#10882f','#ffa500','#1381f4'],
                  orientation='h',
+                 text_auto='.2f',
                  hover_data=["TriPuntos"],
-                 height=800,
+                 height=len(df_tri_puntos)*22,
                  title='🏊‍♀️🚴‍♀️🏃‍♂️ TriPuntos de la semana',
                  text='TriPuntos',
                  labels={'athlete_name':'Triatleta'})
@@ -212,6 +216,7 @@ def serve_layout():
     fig_tripuntos.update_layout({
     'plot_bgcolor': 'rgb(255, 255, 255)',
     'paper_bgcolor': 'rgb(255, 255, 255)',
+    "showlegend": False
     })
     
     

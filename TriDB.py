@@ -22,13 +22,12 @@ from datetime import timedelta
 import urllib3
 from sql import createDB, initConn, getAll, emptyDB, insertJson, getActivity
 import logging
-
+import os
 urllib3.disable_warnings()
 
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-                    )
+current_file_dir = os.path.dirname(__file__)
+log_filename = os.path.join(current_file_dir,'TriDB.log')
+logging.basicConfig(level=logging.INFO,filename=log_filename, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # =============================================================================
 # Aux method: flatten json and remove unnecesary fields
@@ -40,9 +39,9 @@ def cleanActivity(a, fields2keep):
         if k in fields2keep.keys(): result[fields2keep[k]] = a[k]
     result = extractStats(result)
     return result
-        
+
 # =============================================================================
-# Aux method: flatten json 
+# Aux method: flatten json
 # =============================================================================
 def flatten(d, parent_key='', sep='_'):
     items = []
@@ -59,7 +58,7 @@ def flatten(d, parent_key='', sep='_'):
 # =============================================================================
 def extractStats(activity):
     stats = activity.pop('stats')
-    
+
     for i in range(0,len(stats),2):
         stat_value = re.sub('(<.*?>)','',stats[i]['value'])
         stat_value = stat_value.replace(',','')
@@ -97,8 +96,8 @@ logger = logging.getLogger('StravaSyncActivities')
 logger.info('--- Init program ---')
 #init dates and things for the requests
 now = datetime.now()
-cursor = before = now.timestamp()# 1688068009 #1687986440 
-             
+cursor = before = now.timestamp()# 1688068009 #1687986440
+
 url = f"https://www.strava.com/clubs/331843/feed?feed_type=club&athlete_id=20997100&club_id=331843&before={before}&cursor={cursor}"
 payload={}
 headers = {
@@ -136,7 +135,7 @@ while r['pagination']['hasMore']:
             if isFormat(e['activity']['timeAndLocation']['displayDateAtTime'], "%B %d, %Y"):
                 tmp_activity['timeandlocation_displaydateattime_epoc'] = datetime.strptime(e['activity']['timeAndLocation']['displayDateAtTime'],"%B %d, %Y").timestamp()
             if ('Today' in e['activity']['timeAndLocation']['displayDateAtTime']):
-                        tmp_activity['timeandlocation_displaydateattime'] = date.strftime(datetime.today(),"%B %d, %Y") 
+                        tmp_activity['timeandlocation_displaydateattime'] = date.strftime(datetime.today(),"%B %d, %Y")
                         tmp_activity['timeandlocation_displaydateattime_epoc'] = datetime.today().timestamp()
             if ('Yesterday' in e['activity']['timeAndLocation']['displayDateAtTime']):
                         yesterday = datetime.today() - timedelta(days = 1)
@@ -153,26 +152,28 @@ while r['pagination']['hasMore']:
                 tmp_activity['type'] = inner_activity['type']
                 tmp_activity['name'] = inner_activity['name']
                 tmp_activity['athlete_athletename'] = inner_activity['athlete_name']
-                tmp_activity['athlete_sex'] = inner_activity['athlete_sex'] 
+                tmp_activity['athlete_sex'] = inner_activity['athlete_sex']
                 dt = datetime.strptime(inner_activity['start_date_local'], '%Y-%m-%dT%H:%M:%SZ')
                 long_date = dt.strftime("%B %d, %Y at %I:%M %p")
                 tmp_activity['timeandlocation_displaydateattime'] = long_date
                 tmp_activity['timeandlocation_displaydateattime_epoc'] = dt = datetime.strptime(inner_activity['start_date_local'], '%Y-%m-%dT%H:%M:%SZ').timestamp()
                 tmp_activity['athlete_athleteid'] = inner_activity['athlete_id']
-                
+
                 activities.append(cleanActivity(tmp_activity,FIELDS2KEEP))
     logger.debug('Extracted [%s] activities' % len(activities))
     df = pd.DataFrame(activities)
-        
+
     df = df.sort_values(by='cursor_updated_at')
-    df_activities.append(df, ignore_index=False, verify_integrity=False)
+    #df_activities.append(df, ignore_index=False, verify_integrity=False)
+    pd.concat([df_activities, df], ignore_index=True, verify_integrity=False)
+
     before = df.iloc[0]['cursor_updated_at']
     cursor = before
     logger.debug('New cursor [%s]' % cursor)
 #%%
-df = getAll('strava')  
-logger.debug("DB Size [%s]" % len(df))       
-logger.debug("Inserting %s activities" % len(activities))       
+df = getAll('strava')
+logger.debug("DB Size [%s]" % len(df))
+logger.debug("Inserting %s activities" % len(activities))
 nbInserted = 0
 conn=initConn('strava')
 for a in activities:
@@ -185,6 +186,6 @@ for a in activities:
         logger.info('Inserted activity [%s]' % a['id'])
         nbInserted += 1
 conn.close()
-logger.debug('Inserted [%s] activities' % nbInserted)
-df = getAll('strava')  
-logger.debug("DB Size [%s]" % len(df))        
+logger.info('Inserted [%s] activities' % nbInserted)
+df = getAll('strava')
+logger.debug("DB Size [%s]" % len(df))
