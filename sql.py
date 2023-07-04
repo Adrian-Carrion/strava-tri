@@ -53,6 +53,18 @@ def getAll(db_name):
         return df
     finally:
         conn.close()
+
+def getActivity(conn, activity_id):
+    try:
+        cur = conn.cursor()
+        sql_sentence = f"SELECT * FROM activities WHERE id={activity_id}"
+        res = cur.execute(sql_sentence)
+        result = res.fetchall()
+        return result
+    except Exception as e:
+        print(e)
+        pass
+
     
 def insertJson(conn, record):
     try:
@@ -66,7 +78,8 @@ def insertJson(conn, record):
         cur.execute(sql_sentence, values)
         conn.commit()
     except Exception as e:
-        print(e)
+        # print(e)
+        pass
     
 def emptyDB(db_name):  
     try:

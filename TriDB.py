@@ -19,14 +19,20 @@ import collections.abc
 import pandas as pd
 from datetime import date
 from datetime import timedelta
-import sqlite3
 import urllib3
-from sql import createDB, initConn, getAll, emptyDB, insertJson
+from sql import createDB, initConn, getAll, emptyDB, insertJson, getActivity
+import logging
 
 urllib3.disable_warnings()
 
 
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+                    )
 
+# =============================================================================
+# Aux method: flatten json and remove unnecesary fields
+# =============================================================================
 def cleanActivity(a, fields2keep):
     result = {}
     a = flatten(a)
@@ -35,19 +41,23 @@ def cleanActivity(a, fields2keep):
     result = extractStats(result)
     return result
         
-
+# =============================================================================
+# Aux method: flatten json 
+# =============================================================================
 def flatten(d, parent_key='', sep='_'):
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
+        if isinstance(v, collections.abc.MutableMapping):
             items.extend(flatten(v, new_key, sep=sep).items())
         else:
             items.append((new_key.lower(), v))
     return dict(items)
 
+# =============================================================================
+# Aux method: extract stats from activity
+# =============================================================================
 def extractStats(activity):
-    result_stat = {}
     stats = activity.pop('stats')
     
     for i in range(0,len(stats),2):
@@ -56,19 +66,16 @@ def extractStats(activity):
         activity['stat_'+stats[i+1]['value'].lower().replace(' ','_')] = stat_value # stat subtitle
     return activity
 
+
 def isFormat(date_text, date_format):
         try:
             datetime.strptime(date_text, date_format)
             return True
         except ValueError:
             return False
+
 #%%
-utc_date_str = '2023-06-30 12:00:00'
-dt = datetime.strptime(utc_date_str, '%Y-%m-%d %H:%M:%S')
-epoch_date_time = datetime.now().timestamp()
-# epoch_date_time = dt.timestamp()
-before =epoch_date_time# 1688068009 #1687986440 
-cursor = before
+
 
 FIELDS2KEEP = {
     'id': 'id',
@@ -85,9 +92,14 @@ FIELDS2KEEP = {
     'stats': 'stats'
     }
 
-print(datetime.fromtimestamp(1688250407))
-url = f"https://www.strava.com/clubs/331843/feed?feed_type=club&athlete_id=20997100&club_id=331843&before={before}&cursor={cursor}"
+logger = logging.getLogger('StravaSyncActivities')
 
+logger.info('--- Init program ---')
+#init dates and things for the requests
+now = datetime.now()
+cursor = before = now.timestamp()# 1688068009 #1687986440 
+             
+url = f"https://www.strava.com/clubs/331843/feed?feed_type=club&athlete_id=20997100&club_id=331843&before={before}&cursor={cursor}"
 payload={}
 headers = {
   'authority': 'www.strava.com',
@@ -99,13 +111,15 @@ headers = {
   'x-requested-with': 'XMLHttpRequest'
 }
 
-print("New cursor: %s" % datetime.fromtimestamp(cursor))
+
+
 activities = []
 df_activities = pd.DataFrame()
 response = requests.request("GET", url, headers=headers, data=payload, verify=False)
 # print(response.text)
 r = response.json()
 while r['pagination']['hasMore']:
+    logger.debug('--- Getting Club activities. Cursor [%s]' % datetime.strftime(now, '%Y-%m-%d %H:%M:%S'))
     url = f"https://www.strava.com/clubs/331843/feed?feed_type=club&athlete_id=20997100&club_id=331843&before={before}&cursor={cursor}"
     response = requests.request("GET", url, headers=headers, data=payload, verify=False)
     r = response.json()
@@ -147,21 +161,30 @@ while r['pagination']['hasMore']:
                 tmp_activity['athlete_athleteid'] = inner_activity['athlete_id']
                 
                 activities.append(cleanActivity(tmp_activity,FIELDS2KEEP))
-    
+    logger.debug('Extracted [%s] activities' % len(activities))
     df = pd.DataFrame(activities)
         
     df = df.sort_values(by='cursor_updated_at')
     df_activities.append(df, ignore_index=False, verify_integrity=False)
     before = df.iloc[0]['cursor_updated_at']
     cursor = before
-    print("New cursor: %s" % datetime.fromtimestamp(cursor))
+    logger.debug('New cursor [%s]' % cursor)
 #%%
-print("Inserting %s activities" % len(activities))       
+df = getAll('strava')  
+logger.debug("DB Size [%s]" % len(df))       
+logger.debug("Inserting %s activities" % len(activities))       
+nbInserted = 0
 conn=initConn('strava')
 for a in activities:
-    insertJson(conn, a)
+    logger.debug('Inserting activity [%s] activities' % a['id'])
+    activity_exist = getActivity(conn, a['id'])
+    if activity_exist:
+        logger.debug('Activity [%s] already exists. Skipping...' % a['id'])
+    else:
+        insertJson(conn, a)
+        logger.info('Inserted activity [%s]' % a['id'])
+        nbInserted += 1
 conn.close()
-        
-# emptyDB('strava')
-
+logger.debug('Inserted [%s] activities' % nbInserted)
 df = getAll('strava')  
+logger.debug("DB Size [%s]" % len(df))        
